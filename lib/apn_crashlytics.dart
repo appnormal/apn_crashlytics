@@ -1,4 +1,4 @@
-library an_crash_monitoring;
+library apn_crashlytics;
 
 import 'dart:async';
 import 'dart:io';

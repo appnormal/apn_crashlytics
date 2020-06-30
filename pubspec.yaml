@@ -1,0 +1,31 @@
+name: an_crash_monitoring
+description: A new Appnormal flutter package for crash monitoring that wraps Sentry and Firebase Crashlytics.
+version: 0.0.1
+author:
+homepage:
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sentry:
+#  Using this fork for now because the original plugin is still based on the fabric sdk
+  firebase_crashlytics:
+    git:
+      url: https://github.com/axel-op/flutterfire.git
+      path: packages/firebase_crashlytics
+      ref: crashlytics-new-sdk
+  device_info: '>=0.4.0 <2.0.0'
+  package_info: '>=0.4.0 <2.0.0'
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter.
+flutter:

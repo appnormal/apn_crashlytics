@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sentry:
+  sentry: ^3.0.1
 #  Using this fork for now because the original plugin is still based on the fabric sdk
   firebase_crashlytics:
     git:

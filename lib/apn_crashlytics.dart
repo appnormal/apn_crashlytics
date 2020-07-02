@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui show window;
 
+import 'package:connectivity/connectivity.dart';
 import 'package:device_info/device_info.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/widgets.dart';
@@ -15,17 +16,13 @@ class CrashLogging {
   final String envType;
   final String sentryDsn;
 
-  SentryClient sentry;
+  static SentryClient sentry;
 
-  CrashLogging(
-    this.debugEnabled,
-    this.envType,
-    this.sentryDsn, {
-    AndroidDeviceInfo androidDeviceInfo,
-    IosDeviceInfo iosDeviceInfo,
-    PackageInfo packageInfo,
-    bool isOnline,
-  }) {
+  CrashLogging._(this.debugEnabled, this.envType, this.sentryDsn);
+
+  static Future<CrashLogging> init(bool debugEnabled, String envType, String sentryDsn) async {
+    var crashLogging = CrashLogging._(debugEnabled, envType, sentryDsn);
+
     OperatingSystem operatingSystem;
     Device device;
     App app;
@@ -38,6 +35,14 @@ class CrashLogging {
         Zone.current.handleUncaughtError(details.exception, details.stack);
       }
     };
+
+    final packageInfo = await PackageInfo.fromPlatform();
+    AndroidDeviceInfo androidDeviceInfo;
+    IosDeviceInfo iosDeviceInfo;
+
+    if (Platform.isAndroid) androidDeviceInfo = await DeviceInfoPlugin().androidInfo;
+    if (Platform.isIOS) iosDeviceInfo = await DeviceInfoPlugin().iosInfo;
+    var isOnline = (await Connectivity().checkConnectivity()) != ConnectivityResult.none;
 
     if (androidDeviceInfo != null) {
       operatingSystem = OperatingSystem(
@@ -91,6 +96,8 @@ class CrashLogging {
     );
 
     Crashlytics.instance.enableInDevMode = true;
+
+    return crashLogging;
   }
 
   void captureException({dynamic exception, dynamic stacktrace}) {

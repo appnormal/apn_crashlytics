@@ -1,3 +1,7 @@
+## [2.0.1-null-safety] - 06 January 2021
+
+* Move params to constuctor and add init method to sentry
+
 ## [2.0.0-null-safety] - 06 January 2021
 
 * Add nullsafety support

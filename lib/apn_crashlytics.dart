@@ -13,7 +13,7 @@ import 'package:package_info/package_info.dart';
 import 'package:sentry/sentry.dart';
 
 abstract class ICrashLogging {
-  Future<ICrashLogging> init(Map<String, String> params);
+  ICrashLogging(Map<String, String> params);
 
   void captureException({dynamic exception, dynamic stacktrace});
 
@@ -21,16 +21,14 @@ abstract class ICrashLogging {
 }
 
 class ConsoleLogging extends ICrashLogging {
-  @override
-  void captureException({exception, stacktrace}) {
-    //Nothing special needed
+  ConsoleLogging(Map<String, String> params) : super(params) {
+    // This captures errors reported by the Flutter framework.
+    FlutterError.onError = (details) => FlutterError.dumpErrorToConsole(details);
   }
 
   @override
-  Future<ICrashLogging> init(Map<String, String> params) {
-    // This captures errors reported by the Flutter framework.
-    FlutterError.onError = (details) => FlutterError.dumpErrorToConsole(details);
-    return Future.value(ConsoleLogging());
+  void captureException({exception, stacktrace}) {
+    //Nothing special needed
   }
 
   @override
@@ -40,20 +38,17 @@ class ConsoleLogging extends ICrashLogging {
 }
 
 class CrashlyticsLogging extends ICrashLogging {
-  @override
-  void captureException({exception, stacktrace}) {
-    print('Capture raw exception and sending it to Crashlytics');
-    Crashlytics.instance.recordError(exception, stacktrace);
-  }
-
-  @override
-  Future<ICrashLogging> init(Map<String, String> params) async {
+  CrashlyticsLogging(Map<String, String> params) : super(params) {
     // This captures errors reported by the Flutter framework.
     FlutterError.onError = (details) => Zone.current.handleUncaughtError(details.exception, details.stack);
 
     Crashlytics.instance.enableInDevMode = true;
+  }
 
-    return CrashlyticsLogging();
+  @override
+  void captureException({exception, stacktrace}) {
+    print('Capture raw exception and sending it to Crashlytics');
+    Crashlytics.instance.recordError(exception, stacktrace);
   }
 
   @override
@@ -67,19 +62,12 @@ class CrashlyticsLogging extends ICrashLogging {
 }
 
 class SentryLogging extends ICrashLogging {
+  final Map<String, String> params;
   static SentryClient sentry;
 
-  @override
-  void captureException({exception, stacktrace}) {
-    print('Capture raw exception and sending it to Sentry');
-    sentry.captureException(
-      exception: exception,
-      stackTrace: stacktrace,
-    );
-  }
+  SentryLogging(this.params) : super(params);
 
-  @override
-  Future<ICrashLogging> init(Map<String, String> params) async {
+  Future init() async {
     OperatingSystem operatingSystem;
     Device device;
     App app;
@@ -145,29 +133,29 @@ class SentryLogging extends ICrashLogging {
         ),
       ),
     );
+  }
 
-    return SentryLogging();
+  @override
+  void captureException({exception, stacktrace}) {
+    print('Capture raw exception and sending it to Sentry');
+    sentry.captureException(
+      exception: exception,
+      stackTrace: stacktrace,
+    );
   }
 
   @override
   void setUserId(String userId) {
-    if (userId != null) {
-      sentry.userContext = User(id: userId);
-    } else {
-      sentry.userContext = null;
-    }
+    sentry.userContext = userId == null ? null : User(id: userId);
   }
 }
 
 class NoopCrashLogging extends ICrashLogging {
+  NoopCrashLogging(Map<String, String> params) : super(params);
+
   @override
   void captureException({exception, stacktrace}) {
     //No-op
-  }
-
-  @override
-  Future<ICrashLogging> init(Map<String, String> params) {
-    return Future.value(NoopCrashLogging());
   }
 
   @override

@@ -1,6 +1,6 @@
 name: apn_crashlytics
 description: A new Appnormal flutter package for crash monitoring that wraps Sentry and Firebase Crashlytics.
-version: 2.0.1-null-safety
+version: 2.0.2-null-safety
 homepage: https://github.com/appnormal/apn_crashlytics
 
 environment:

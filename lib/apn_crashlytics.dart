@@ -21,7 +21,7 @@ abstract class ICrashLogging {
 }
 
 class ConsoleLogging extends ICrashLogging {
-  ConsoleLogging(Map<String, String> params) : super(params) {
+  ConsoleLogging() : super({}) {
     // This captures errors reported by the Flutter framework.
     FlutterError.onError = (details) => FlutterError.dumpErrorToConsole(details);
   }
@@ -53,11 +53,7 @@ class CrashlyticsLogging extends ICrashLogging {
 
   @override
   void setUserId(String userId) {
-    if (userId != null) {
-      Crashlytics.instance.setUserIdentifier(userId);
-    } else {
-      Crashlytics.instance.setUserIdentifier(null);
-    }
+    Crashlytics.instance.setUserIdentifier(userId);
   }
 }
 
@@ -151,7 +147,7 @@ class SentryLogging extends ICrashLogging {
 }
 
 class NoopCrashLogging extends ICrashLogging {
-  NoopCrashLogging(Map<String, String> params) : super(params);
+  NoopCrashLogging() : super({});
 
   @override
   void captureException({exception, stacktrace}) {

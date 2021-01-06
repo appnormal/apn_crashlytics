@@ -1,3 +1,4 @@
+// @dart=2.10
 library apn_crashlytics;
 
 import 'dart:async';
@@ -11,30 +12,80 @@ import 'package:flutter/widgets.dart';
 import 'package:package_info/package_info.dart';
 import 'package:sentry/sentry.dart';
 
-class CrashLogging {
-  final bool debugEnabled;
-  final String envType;
-  final String sentryDsn;
+abstract class ICrashLogging {
+  Future<ICrashLogging> init(Map<String, String> params);
 
+  void captureException({dynamic exception, dynamic stacktrace});
+
+  void setUserId(String userId);
+}
+
+class ConsoleLogging extends ICrashLogging {
+  @override
+  void captureException({exception, stacktrace}) {
+    //Nothing special needed
+  }
+
+  @override
+  Future<ICrashLogging> init(Map<String, String> params) {
+    // This captures errors reported by the Flutter framework.
+    FlutterError.onError = (details) => FlutterError.dumpErrorToConsole(details);
+    return Future.value(ConsoleLogging());
+  }
+
+  @override
+  void setUserId(String userId) {
+    //Nothing special needed
+  }
+}
+
+class CrashlyticsLogging extends ICrashLogging {
+  @override
+  void captureException({exception, stacktrace}) {
+    print('Capture raw exception and sending it to Crashlytics');
+    Crashlytics.instance.recordError(exception, stacktrace);
+  }
+
+  @override
+  Future<ICrashLogging> init(Map<String, String> params) async {
+    // This captures errors reported by the Flutter framework.
+    FlutterError.onError = (details) => Zone.current.handleUncaughtError(details.exception, details.stack);
+
+    Crashlytics.instance.enableInDevMode = true;
+
+    return CrashlyticsLogging();
+  }
+
+  @override
+  void setUserId(String userId) {
+    if (userId != null) {
+      Crashlytics.instance.setUserIdentifier(userId);
+    } else {
+      Crashlytics.instance.setUserIdentifier(null);
+    }
+  }
+}
+
+class SentryLogging extends ICrashLogging {
   static SentryClient sentry;
 
-  CrashLogging._(this.debugEnabled, this.envType, this.sentryDsn);
+  @override
+  void captureException({exception, stacktrace}) {
+    print('Capture raw exception and sending it to Sentry');
+    sentry.captureException(
+      exception: exception,
+      stackTrace: stacktrace,
+    );
+  }
 
-  static Future<CrashLogging> init(bool debugEnabled, String envType, String sentryDsn) async {
-    var crashLogging = CrashLogging._(debugEnabled, envType, sentryDsn);
-
+  @override
+  Future<ICrashLogging> init(Map<String, String> params) async {
     OperatingSystem operatingSystem;
     Device device;
     App app;
 
     // This captures errors reported by the Flutter framework.
-    FlutterError.onError = (details) {
-      if (debugEnabled) {
-        FlutterError.dumpErrorToConsole(details);
-      } else {
-        Zone.current.handleUncaughtError(details.exception, details.stack);
-      }
-    };
+    FlutterError.onError = (details) => Zone.current.handleUncaughtError(details.exception, details.stack);
 
     final packageInfo = await PackageInfo.fromPlatform();
     AndroidDeviceInfo androidDeviceInfo;
@@ -83,9 +134,9 @@ class CrashLogging {
     }
 
     sentry = SentryClient(
-      dsn: sentryDsn,
+      dsn: params['sentryDsn'],
       environmentAttributes: Event(
-        environment: envType,
+        environment: params['envType'],
         contexts: Contexts(
           operatingSystem: operatingSystem,
           device: device,
@@ -95,29 +146,32 @@ class CrashLogging {
       ),
     );
 
-    Crashlytics.instance.enableInDevMode = true;
-
-    return crashLogging;
+    return SentryLogging();
   }
 
-  void captureException({dynamic exception, dynamic stacktrace}) {
-    print('Capture raw exception and sending to crash logs');
-
-    sentry.captureException(
-      exception: exception,
-      stackTrace: stacktrace,
-    );
-
-    Crashlytics.instance.recordError(exception, stacktrace);
-  }
-
+  @override
   void setUserId(String userId) {
     if (userId != null) {
       sentry.userContext = User(id: userId);
-      Crashlytics.instance.setUserIdentifier(userId);
     } else {
       sentry.userContext = null;
-      Crashlytics.instance.setUserIdentifier(null);
     }
+  }
+}
+
+class NoopCrashLogging extends ICrashLogging {
+  @override
+  void captureException({exception, stacktrace}) {
+    //No-op
+  }
+
+  @override
+  Future<ICrashLogging> init(Map<String, String> params) {
+    return Future.value(NoopCrashLogging());
+  }
+
+  @override
+  void setUserId(String userId) {
+    //No-op
   }
 }

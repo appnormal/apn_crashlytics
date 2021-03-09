@@ -1,3 +1,7 @@
+## [1.0.2] - 09 March 2021
+
+* Update Firebase Crashlytics to the latest stable version pre-null-safety.
+
 ## [2.0.1-null-safety] - 06 January 2021
 
 * Move params to constuctor and add init method to sentry

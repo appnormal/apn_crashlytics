@@ -1,17 +1,16 @@
 name: apn_crashlytics
 description: A new Appnormal flutter package for crash monitoring that wraps Sentry and Firebase Crashlytics.
-version: 2.0.2-null-safety
+version: 1.0.2
 homepage: https://github.com/appnormal/apn_crashlytics
 
 environment:
-  sdk: ">=2.12.0-0 <3.0.0"
+  sdk: ">=2.10.2-0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   sentry: ^3.0.1
-#  Using this fork for now because the original plugin is still based on the fabric sdk
-  firebase_crashlytics: ^0.1.4+1
+  firebase_crashlytics: ^0.4.0+1
   device_info: '>=0.4.0 <2.0.0'
   package_info: '>=0.4.0 <2.0.0'
   connectivity: '>=0.4.0 <2.0.0'

@@ -42,18 +42,18 @@ class CrashlyticsLogging extends ICrashLogging {
     // This captures errors reported by the Flutter framework.
     FlutterError.onError = (details) => Zone.current.handleUncaughtError(details.exception, details.stack);
 
-    Crashlytics.instance.enableInDevMode = true;
+    FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
   }
 
   @override
   void captureException({exception, stacktrace}) {
     print('Capture raw exception and sending it to Crashlytics');
-    Crashlytics.instance.recordError(exception, stacktrace);
+    FirebaseCrashlytics.instance.recordError(exception, stacktrace);
   }
 
   @override
   void setUserId(String userId) {
-    Crashlytics.instance.setUserIdentifier(userId);
+    FirebaseCrashlytics.instance.setUserIdentifier(userId);
   }
 }
 
